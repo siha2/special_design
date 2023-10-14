@@ -25,19 +25,16 @@ let backgroundLocalItem = localStorage.getItem("background_option");
 
 // check if random background local storage is not empty
 if (backgroundLocalItem !== null) {
-  if (backgroundLocalItem === "true") {
-    backgroundOption = true;
-  } else {
-    backgroundOption = false;
-  }
-
   // remove active class from all spans
   document.querySelectorAll(".random-backgrounds span").forEach(element => {
     element.classList.remove("active");
   });
+
   if (backgroundLocalItem === "true") {
+    backgroundOption = true;
     document.querySelector(".random-backgrounds .yes").classList.add("active");
   } else {
+    backgroundOption = false;
     document.querySelector(".random-backgrounds .no").classList.add("active");
   }
 }
@@ -62,13 +59,7 @@ colorsLi.forEach(li => {
     // set color on local storage
     localStorage.setItem("color_option", e.target.dataset.color);
 
-    // remove active class from all children
-    e.target.parentElement.querySelectorAll(".active").forEach(element => {
-      element.classList.remove("active");
-    })
-
-    // add active class on self
-    e.target.classList.add("active");
+    handleActive(e);
   });
 });
 
@@ -77,17 +68,13 @@ const randomBackEl = document.querySelectorAll(".random-backgrounds span");
 randomBackEl.forEach(apan => {
   apan.addEventListener("click", (e) => {
 
-    // remove active class from all children
-    e.target.parentElement.querySelectorAll(".active").forEach(element => {
-      element.classList.remove("active");
-    })
-
-    // add active class on self
-    e.target.classList.add("active");
+    handleActive(e);
     if (e.target.dataset.background === "yes") {
-      backgroundOption = true;
-      randomizeImgs();
-      localStorage.setItem("background_option", true);
+      if (backgroundOption === false) {
+        backgroundOption = true;
+        randomizeImgs();
+        localStorage.setItem("background_option", true);
+      }
     } else {
       backgroundOption = false;
       clearInterval(backgroundInterval);
@@ -116,3 +103,147 @@ function randomizeImgs() {
 }
 
 randomizeImgs();
+
+
+// select skills selector
+let ourSkills = document.querySelector(".skills");
+
+window.onscroll = function () {
+  let skillsOffsetTop = ourSkills.offsetTop;
+  let skillsOuterHeight = ourSkills.offsetHeight;
+  let windowHeight = this.innerHeight;
+  let windowScrollTop = this.scrollY;
+  if (windowScrollTop > (skillsOffsetTop + skillsOuterHeight - windowHeight)) {
+    let allSkills = document.querySelectorAll(".skill-box .skill-progress span");
+    allSkills.forEach(skill => {
+      skill.style.width = skill.dataset.progress;
+    })
+  }
+}
+
+// create popup with the image
+let ourGallery = document.querySelectorAll(".gallery img");
+ourGallery.forEach(img => {
+  img.addEventListener("click", (e) => {
+
+    let overlay = document.createElement("div");
+    overlay.className = "popup-overlay";
+    document.body.append(overlay);
+
+    let popupBox = document.createElement("div");
+    popupBox.className = "popup-box";
+    
+    if (img.alt !== "") {
+      let imgHeading = document.createElement("h3");
+      let imgText = document.createTextNode(img.alt);
+      imgHeading.append(imgText);
+      popupBox.append(imgHeading);
+    }
+
+    let popupImage = document.createElement("img");
+    popupImage.src = img.src;
+    popupBox.append(popupImage);
+    document.body.append(popupBox);
+
+    let closeButton = document.createElement("span");
+    let closeButtonText = document.createTextNode("X");
+    closeButton.append(closeButtonText);
+    closeButton.className = "close-button";
+    popupBox.append(closeButton);
+  })
+})
+
+// close popup
+document.addEventListener("click", function (e) {
+  if (e.target.className == "close-button") {
+    e.target.parentNode.remove();
+    document.querySelector(".popup-overlay").remove();
+  }
+})
+
+// select all links
+const allBullets = document.querySelectorAll(".nav-bullets .bullet");
+
+function scrollToSomeWhere(elements) {
+  elements.forEach(ele => {
+    ele.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelector(e.target.dataset.section).scrollIntoView({
+        behavior: "smooth"
+      })
+    })
+  })
+}
+
+scrollToSomeWhere(allBullets);
+
+// handle active state
+function handleActive(ev) {
+  ev.target.parentElement.querySelectorAll(".active").forEach(element => {
+    element.classList.remove("active");
+  });
+  ev.target.classList.add("active");
+}
+
+// show and hidden bullets
+let bulletsSpan = document.querySelectorAll(".bullets-option span");
+let bulletsContainer = document.querySelector(".nav-bullets");
+let bulletLocalItem = localStorage.getItem("bullets_option");
+
+if (bulletLocalItem !== null) {
+  bulletsSpan.forEach(span => {
+    span.classList.remove("active");
+  });
+  if (bulletLocalItem === "block") {
+    bulletsContainer.style.display = "block";
+    document.querySelector(".bullets-option .yes").classList.add("active");
+  } else {
+    bulletsContainer.style.display = "none";
+    document.querySelector(".bullets-option .no").classList.add("active");
+  }
+}
+bulletsSpan.forEach(span => {
+  span.addEventListener("click", (e) => {
+    if (span.dataset.display === "show") {
+      bulletsContainer.style.display = "block";
+      localStorage.setItem("bullets_option", "block");
+    } else {
+      bulletsContainer.style.display = "none";
+      localStorage.setItem("bullets_option", "none");
+    }
+    handleActive(e);
+  })
+})
+
+// reset button
+document.querySelector(".reset-options").onclick = function () {
+  localStorage.removeItem("background_option");
+  localStorage.removeItem("color_option");
+  localStorage.removeItem("bullets_option");
+  window.location.reload();
+}
+
+// toggle menu
+let toggleBtn = document.querySelector(".toggle-menu");
+let tLinks = document.querySelector(".links");
+
+toggleBtn.onclick = function (e) {
+  e.stopPropagation();
+  this.classList.toggle("menu-active");
+  tLinks.classList.toggle("open");
+}
+
+// click anywhere outside menu and goggle button
+document.addEventListener("click", (e) => {
+  if (e.target !== toggleBtn && e.target !== tLinks) {
+    if (tLinks.classList.contains("open")) {
+      toggleBtn.classList.toggle("menu-active");
+      tLinks.classList.toggle("open");
+    }
+  }
+})
+
+// stop propagation on menu
+tLinks.onclick = function (e) {
+  e.stopPropagation();
+}
